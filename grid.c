@@ -79,18 +79,18 @@ bool is_valid(Point point) {
 bool is_ended(Grid grid) {
 	if (grid.model == 0) {
 		// TODO :O
-		bool all_tiles_are_fire = true;
+		bool is_fire = false;
 
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
-				if (grid.data[i][j] != NEW_FIRE) {
-					all_tiles_are_fire = false;
+				if (grid.data[i][j] == NEW_FIRE || grid.data[i][j] == OLD_FIRE) {
+					is_fire = true;
 					break;
 				}
 			}
 		}
 
-		return all_tiles_are_fire;
+		return !is_fire;
 	} else {
 		// Unknown model
 		return true;
