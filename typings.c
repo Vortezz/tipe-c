@@ -1,9 +1,9 @@
 #include <SDL2/SDL.h>
 
 // Represents the size of the window in tiles
-const int GRID_SIZE = 32;
+const int GRID_SIZE = 64;
 // Represents the size of a tile in pixels
-const int TILE_SIZE = 16;
+const int TILE_SIZE = 8;
 
 typedef struct {
 	SDL_Window * window;
@@ -24,7 +24,10 @@ typedef struct {
 typedef enum {
 	TREE,
 	WATER,
-	GRASS
+	GRASS,
+	NEW_FIRE,
+	OLD_FIRE,
+	BURNT
 } TileType;
 
 typedef struct {
@@ -41,5 +44,11 @@ Color get_color(TileType type) {
 			return (Color) {0, 0, 255};
 		case GRASS:
 			return (Color) {0, 255, 0};
+		case NEW_FIRE:
+			return (Color) {255, 0, 0};
+		case OLD_FIRE:
+			return (Color) {150, 0, 0};
+		case BURNT:
+			return (Color) {100, 100, 100};
 	}
 }
