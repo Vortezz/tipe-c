@@ -2,12 +2,13 @@
 #include <cjson/cJSON.h>
 #include <unistd.h>
 
-Grid create_grid() {
+Grid create_grid(int model) {
 	Window window = create_window();
 
 	Grid grid = {
 			.data = (TileType **) malloc(GRID_SIZE * sizeof(*grid.data)),
-			.window = window
+			.window = window,
+			.model = model
 	};
 
 	for (int i = 0; i < GRID_SIZE; i++) {
@@ -35,6 +36,10 @@ Grid create_grid() {
 	}
 
 	return grid;
+}
+
+bool is_ended(Grid grid) {
+	return true;
 }
 
 void tick(Grid grid) {

@@ -30,6 +30,7 @@ typedef enum {
 typedef struct {
 	TileType ** data;
 	Window window;
+	int model;
 } Grid;
 
 Color get_color(TileType type) {
