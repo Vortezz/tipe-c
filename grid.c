@@ -112,8 +112,12 @@ void tick(Grid * grid) {
 				Point * neighbours = get_direct_neighbours(point);
 
 				for (int k = 0; k < 4; k++) {
-					if (is_valid(neighbours[k]) && get_tile(*grid, neighbours[k]) == TREE && rand() % 16 == 0) {
-						copy[neighbours[k].x][neighbours[k].y] = NEW_FIRE;
+					if (is_valid(neighbours[k])) {
+						int random = rand() % 16;
+
+						if (get_tile(*grid, neighbours[k]) == TREE && random == 0 || get_tile(*grid, neighbours[k]) == GRASS && random % 8 == 0) {
+							copy[neighbours[k].x][neighbours[k].y] = NEW_FIRE;
+						}
 					}
 				}
 
