@@ -36,7 +36,7 @@ Grid create_grid(int model) {
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				// Just for OwO purposes
-				grid.data[i][j] = rand() % 3;
+				grid.data[i][j] = rand() % 4;
 			}
 		}
 
