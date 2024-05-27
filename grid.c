@@ -8,7 +8,8 @@ Grid create_grid(int model) {
 	Grid grid = {
 			.data = (TileType **) malloc(GRID_SIZE * sizeof(*grid.data)),
 			.window = window,
-			.model = model
+			.model = model,
+			.ended = false
 	};
 
 	for (int i = 0; i < GRID_SIZE; i++) {
@@ -113,9 +114,10 @@ void tick(Grid * grid) {
 
 				for (int k = 0; k < 4; k++) {
 					if (is_valid(neighbours[k])) {
-						int random = rand() % 16;
+						int random = rand() % 8;
 
-						if (get_tile(*grid, neighbours[k]) == TREE && random == 0 || get_tile(*grid, neighbours[k]) == GRASS && random % 8 == 0) {
+						if (get_tile(*grid, neighbours[k]) == TREE && random == 0 ||
+							get_tile(*grid, neighbours[k]) == GRASS && random % 8 == 0) {
 							copy[neighbours[k].x][neighbours[k].y] = NEW_FIRE;
 						}
 					}
@@ -123,7 +125,7 @@ void tick(Grid * grid) {
 
 				free(neighbours);
 
-				if (rand() % 8 == 0) {
+				if (rand() % 16 == 0) {
 					if (get_tile(*grid, point) == NEW_FIRE) {
 						copy[point.x][point.y] = OLD_FIRE;
 					} else {

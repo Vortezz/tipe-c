@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 
 // Represents the size of the window in tiles
 const int GRID_SIZE = 64;
@@ -34,6 +35,7 @@ typedef struct {
 	TileType ** data;
 	Window window;
 	int model;
+	bool ended;
 } Grid;
 
 Color get_color(TileType type) {
