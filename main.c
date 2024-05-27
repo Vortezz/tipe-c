@@ -59,14 +59,12 @@ int main(int argc, char * argv[]) {
 	} else if (count <= 18) {
 		max_x = 6;
 		max_y = 3;
-	} else {
-		if (count > 36) {
-			printf("Too many grids to display, limiting to 36\n");
-			count = 36;
-		}
-
+	} else if (count <= 36) {
 		max_x = 9;
 		max_y = 4;
+	} else {
+		max_x = 14;
+		max_y = 7;
 	}
 
 	Window window = create_window(max_x, max_y);

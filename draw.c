@@ -45,7 +45,8 @@ Window create_window(int max_x, int max_y) {
 			.surface = NULL
 	};
 
-	TILE_SIZE = 8 - (1.5) * (max_y - 1);
+	TILE_SIZE = 8 - (1.5) * min(max_y - 1, 4);
+	printf("TILE_SIZE: %d\n", TILE_SIZE);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
