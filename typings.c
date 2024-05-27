@@ -4,7 +4,7 @@
 // Represents the size of the window in tiles
 const int GRID_SIZE = 64;
 // Represents the size of a tile in pixels
-const int TILE_SIZE = 8;
+int TILE_SIZE = 8;
 
 typedef struct {
 	SDL_Window * window;
@@ -36,6 +36,8 @@ typedef struct {
 	Window window;
 	int model;
 	bool ended;
+	int coord_x;
+	int coord_y;
 } Grid;
 
 Color get_color(TileType type) {

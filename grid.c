@@ -2,14 +2,14 @@
 #include <cjson/cJSON.h>
 #include <unistd.h>
 
-Grid create_grid(int model) {
-	Window window = create_window();
-
+Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	Grid grid = {
 			.data = (TileType **) malloc(GRID_SIZE * sizeof(*grid.data)),
 			.window = window,
 			.model = model,
-			.ended = false
+			.ended = false,
+			.coord_x = coord_x,
+			.coord_y = coord_y
 	};
 
 	for (int i = 0; i < GRID_SIZE; i++) {
@@ -152,6 +152,4 @@ void destroy_grid(Grid grid) {
 	}
 
 	free(grid.data);
-
-	destroy_window(grid.window);
 }

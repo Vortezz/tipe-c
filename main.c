@@ -35,8 +35,44 @@ int main(int argc, char * argv[]) {
 	int remaining = count;
 	Grid * grids = malloc(count * sizeof(*grids));
 
+	if (tick_ms < 2) {
+		printf("Invalid tick, setting to 2\n");
+		tick_ms = 2;
+	}
+
+	if (count <= 0) {
+		printf("Invalid count, setting to 1\n");
+		count = 1;
+	}
+
+	int max_x;
+	int max_y;
+	if (count == 1) {
+		max_x = 1;
+		max_y = 1;
+	} else if (count <= 2) {
+		max_x = 2;
+		max_y = 1;
+	} else if (count <= 6) {
+		max_x = 3;
+		max_y = 2;
+	} else if (count <= 18) {
+		max_x = 6;
+		max_y = 3;
+	} else {
+		if (count > 36) {
+			printf("Too many grids to display, limiting to 36\n");
+			count = 36;
+		}
+
+		max_x = 9;
+		max_y = 4;
+	}
+
+	Window window = create_window(max_x, max_y);
+
 	for (int i = 0; i < count; i++) {
-		grids[i] = create_grid(model);
+		grids[i] = create_grid(model, window, i % max_x, i / max_x);
 	}
 
 	do {
@@ -70,6 +106,9 @@ int main(int argc, char * argv[]) {
 	for (int i = 0; i < count; i++) {
 		destroy_grid(grids[i]);
 	}
+
+	destroy_window(window);
+	free(grids);
 
 	return 0;
 }

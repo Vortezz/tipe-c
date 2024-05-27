@@ -30,18 +30,22 @@ void draw_square(Window window, Point point, int size, Color color, bool update)
 void draw_grid(Window window, Grid grid) {
 	for (int i = 0; i < GRID_SIZE; i++) {
 		for (int j = 0; j < GRID_SIZE; j++) {
-			draw_square(window, (Point) {i * TILE_SIZE, j * TILE_SIZE}, TILE_SIZE, get_color(grid.data[i][j]), false);
+			draw_square(window, (Point) {TILE_SIZE * (i + (GRID_SIZE + 1) * grid.coord_x),
+										 TILE_SIZE * (j + (GRID_SIZE + 1) * grid.coord_y)}, TILE_SIZE,
+						get_color(grid.data[i][j]), false);
 		}
 	}
 
 	SDL_UpdateWindowSurface(window.window);
 }
 
-Window create_window() {
+Window create_window(int max_x, int max_y) {
 	Window window = {
 			.window = NULL,
 			.surface = NULL
 	};
+
+	TILE_SIZE = 8 - (1.5) * (max_y - 1);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -50,8 +54,8 @@ Window create_window() {
 				"TIPE :O",
 				SDL_WINDOWPOS_UNDEFINED,
 				SDL_WINDOWPOS_UNDEFINED,
-				GRID_SIZE * TILE_SIZE,
-				GRID_SIZE * TILE_SIZE,
+				(max_x * (GRID_SIZE + 1) - 1) * TILE_SIZE,
+				(max_y * (GRID_SIZE + 1) - 1) * TILE_SIZE,
 				SDL_WINDOW_SHOWN
 		);
 

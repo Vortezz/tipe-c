@@ -10,7 +10,7 @@ int min(int a, int b) {
 	return a < b ? a : b;
 }
 
-char* readfile(FILE *f) {
+char * readfile(FILE * f) {
 	// f invalid? fseek() fail?
 	if (f == NULL || fseek(f, 0, SEEK_END)) {
 		return NULL;
@@ -25,7 +25,7 @@ char* readfile(FILE *f) {
 
 	// Convert from long to size_t
 	size_t ulength = (size_t) length;
-	char *buffer = malloc(ulength + 1);
+	char * buffer = malloc(ulength + 1);
 	// Allocation failed? Read incomplete?
 	if (buffer == NULL || fread(buffer, 1, ulength, f) != ulength) {
 		free(buffer);
