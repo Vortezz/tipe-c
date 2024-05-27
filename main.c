@@ -84,6 +84,7 @@ int main(int argc, char * argv[]) {
 					destroy_grid(grids[i]);
 				}
 
+				free(grids);
 				return 0;
 			}
 		}
@@ -92,6 +93,7 @@ int main(int argc, char * argv[]) {
 			if (!grids[i].ended) {
 				tick(&grids[i]);
 
+				grids[i].ended = is_ended(grids[i]);
 				if (grids[i].ended) {
 					remaining--;
 				}
