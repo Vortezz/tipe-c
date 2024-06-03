@@ -2,6 +2,15 @@
 #include <cjson/cJSON.h>
 #include <unistd.h>
 
+/**
+ * Model 0 constants
+ *
+ * The following probabilities are 1 / [number]
+ */
+const int M0_PROBA_TREE_BURN = 8;
+const int M0_PROBA_GRASS_BURN = 8;
+const int M0_PROBA_STATE_CHANGE = 16;
+
 Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	Grid grid = {
 			.data = (TileType **) malloc(GRID_SIZE * sizeof(*grid.data)),
@@ -102,6 +111,7 @@ void tick(Grid * grid) {
 	TileType ** copy = copy_grid(grid->data);
 
 	if (grid->model == 0) {
+		// MODEL 0
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				Point point = (Point) {i, j};
@@ -114,10 +124,10 @@ void tick(Grid * grid) {
 
 				for (int k = 0; k < 4; k++) {
 					if (is_valid(neighbours[k])) {
-						int random = rand() % 8;
+						int random = rand();
 
-						if (get_tile(*grid, neighbours[k]) == TREE && random == 0 ||
-							get_tile(*grid, neighbours[k]) == GRASS && random % 8 == 0) {
+						if (get_tile(*grid, neighbours[k]) == TREE && random % M0_PROBA_TREE_BURN == 0 ||
+							get_tile(*grid, neighbours[k]) == GRASS && random % M0_PROBA_GRASS_BURN == 0) {
 							copy[neighbours[k].x][neighbours[k].y] = NEW_FIRE;
 						}
 					}
@@ -125,7 +135,7 @@ void tick(Grid * grid) {
 
 				free(neighbours);
 
-				if (rand() % 16 == 0) {
+				if (rand() % M0_PROBA_STATE_CHANGE == 0) {
 					if (get_tile(*grid, point) == NEW_FIRE) {
 						copy[point.x][point.y] = OLD_FIRE;
 					} else {
