@@ -26,13 +26,18 @@ typedef enum {
 	TREE,
 	WATER,
 	GRASS,
-	NEW_FIRE,
-	OLD_FIRE,
+	FIRE,
 	BURNT
 } TileType;
 
 typedef struct {
-	TileType ** data;
+	TileType default_type;
+	TileType current_type;
+	int state;
+} Tile;
+
+typedef struct {
+	Tile ** data;
 	Window window;
 	int model;
 	bool ended;
@@ -40,7 +45,7 @@ typedef struct {
 	int coord_y;
 } Grid;
 
-Color get_color(TileType type) {
+Color get_color(TileType type, int state) {
 	switch (type) {
 		case TREE:
 			return (Color) {0, 150, 0};
@@ -48,10 +53,15 @@ Color get_color(TileType type) {
 			return (Color) {0, 0, 255};
 		case GRASS:
 			return (Color) {0, 255, 0};
-		case NEW_FIRE:
-			return (Color) {255, 0, 0};
-		case OLD_FIRE:
-			return (Color) {150, 0, 0};
+		case FIRE:
+			switch (state) {
+				case 0:
+					return (Color) {255, 0, 0};
+				case 1:
+					return (Color) {150, 0, 0};
+				default:
+					return (Color) {255, 0, 0};
+			}
 		case BURNT:
 			return (Color) {100, 100, 100};
 	}

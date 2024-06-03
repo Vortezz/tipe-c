@@ -13,7 +13,7 @@ const int M0_PROBA_STATE_CHANGE = 16;
 
 Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	Grid grid = {
-			.data = (TileType **) malloc(GRID_SIZE * sizeof(*grid.data)),
+			.data = (Tile **) malloc(GRID_SIZE * sizeof(*grid.data)),
 			.window = window,
 			.model = model,
 			.ended = false,
@@ -22,7 +22,7 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	};
 
 	for (int i = 0; i < GRID_SIZE; i++) {
-		grid.data[i] = (TileType *) malloc(GRID_SIZE * sizeof(*grid.data[i]));
+		grid.data[i] = (Tile *) malloc(GRID_SIZE * sizeof(*grid.data[i]));
 	}
 
 	if (access("grid.json", F_OK) == 0) {
@@ -35,7 +35,10 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 		for (int i = 0; i < GRID_SIZE; i++) {
 			cJSON * row = cJSON_GetArrayItem(grid_json_object, i);
 			for (int j = 0; j < GRID_SIZE; j++) {
-				grid.data[i][j] = cJSON_GetArrayItem(row, j)->valueint;
+				int value = cJSON_GetArrayItem(row, j)->valueint;
+				grid.data[i][j].current_type = value;
+				grid.data[i][j].default_type = value;
+				grid.data[i][j].state = 0;
 			}
 		}
 
@@ -46,7 +49,10 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				// Just for OwO purposes
-				grid.data[i][j] = rand() % 4;
+				int value = rand() % 4;
+				grid.data[i][j].current_type = value;
+				grid.data[i][j].default_type = value;
+				grid.data[i][j].state = 0;
 			}
 		}
 
@@ -56,18 +62,18 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	return grid;
 }
 
-TileType ** copy_grid(TileType ** data) {
-	TileType ** copy = (TileType **) malloc(GRID_SIZE * sizeof(*copy));
+Tile ** copy_grid(Tile ** data) {
+	Tile ** copy = (Tile **) malloc(GRID_SIZE * sizeof(*copy));
 
 	for (int i = 0; i < GRID_SIZE; i++) {
-		copy[i] = (TileType *) malloc(GRID_SIZE * sizeof(*copy[i]));
+		copy[i] = (Tile *) malloc(GRID_SIZE * sizeof(*copy[i]));
 		memcpy(copy[i], data[i], GRID_SIZE * sizeof(*copy[i]));
 	}
 
 	return copy;
 }
 
-TileType get_tile(Grid grid, Point point) {
+Tile get_tile(Grid grid, Point point) {
 	return grid.data[point.x][point.y];
 }
 
@@ -93,7 +99,7 @@ bool is_ended(Grid grid) {
 
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
-				if (grid.data[i][j] == NEW_FIRE || grid.data[i][j] == OLD_FIRE) {
+				if (grid.data[i][j].current_type == FIRE) {
 					is_fire = true;
 					break;
 				}
@@ -108,7 +114,7 @@ bool is_ended(Grid grid) {
 }
 
 void tick(Grid * grid) {
-	TileType ** copy = copy_grid(grid->data);
+	Tile ** copy = copy_grid(grid->data);
 
 	if (grid->model == 0) {
 		// MODEL 0
@@ -116,7 +122,7 @@ void tick(Grid * grid) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				Point point = (Point) {i, j};
 
-				if (get_tile(*grid, point) != NEW_FIRE && get_tile(*grid, point) != OLD_FIRE) {
+				if (get_tile(*grid, point).current_type != FIRE) {
 					continue;
 				}
 
@@ -126,20 +132,22 @@ void tick(Grid * grid) {
 					if (is_valid(neighbours[k])) {
 						int random = rand();
 
-						if (get_tile(*grid, neighbours[k]) == TREE && random % M0_PROBA_TREE_BURN == 0 ||
-							get_tile(*grid, neighbours[k]) == GRASS && random % M0_PROBA_GRASS_BURN == 0) {
-							copy[neighbours[k].x][neighbours[k].y] = NEW_FIRE;
+						if (get_tile(*grid, neighbours[k]).current_type == TREE && random % M0_PROBA_TREE_BURN == 0 ||
+							get_tile(*grid, neighbours[k]).current_type == GRASS && random % M0_PROBA_GRASS_BURN == 0) {
+							copy[neighbours[k].x][neighbours[k].y].current_type = FIRE;
+							copy[neighbours[k].x][neighbours[k].y].state = 0;
 						}
 					}
 				}
 
 				free(neighbours);
 
-				if (rand() % M0_PROBA_STATE_CHANGE == 0) {
-					if (get_tile(*grid, point) == NEW_FIRE) {
-						copy[point.x][point.y] = OLD_FIRE;
+				if (get_tile(*grid, point).current_type == FIRE && rand() % M0_PROBA_STATE_CHANGE == 0) {
+					if (get_tile(*grid, point).state == 0) {
+						copy[point.x][point.y].state++;
 					} else {
-						copy[point.x][point.y] = BURNT;
+						copy[point.x][point.y].current_type = BURNT;
+						copy[point.x][point.y].state = 0;
 					}
 				}
 			}

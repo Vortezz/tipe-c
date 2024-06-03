@@ -30,9 +30,10 @@ void draw_square(Window window, Point point, int size, Color color, bool update)
 void draw_grid(Window window, Grid grid) {
 	for (int i = 0; i < GRID_SIZE; i++) {
 		for (int j = 0; j < GRID_SIZE; j++) {
+			Tile tile = grid.data[i][j];
 			draw_square(window, (Point) {TILE_SIZE * (i + (GRID_SIZE + 1) * grid.coord_x),
 										 TILE_SIZE * (j + (GRID_SIZE + 1) * grid.coord_y)}, TILE_SIZE,
-						get_color(grid.data[i][j]), false);
+						get_color(tile.current_type, tile.state), false);
 		}
 	}
 
