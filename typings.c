@@ -48,21 +48,21 @@ typedef struct {
 Color get_color(TileType type, int state) {
 	switch (type) {
 		case TREE:
-			return (Color) {0, 150, 0};
+			return (Color) {30, 81, 52};
 		case WATER:
-			return (Color) {0, 0, 255};
+			return (Color) {113, 175, 172};
 		case GRASS:
-			return (Color) {0, 255, 0};
+			return (Color) {53, 105, 74};
 		case FIRE:
 			switch (state) {
 				case 0:
-					return (Color) {255, 0, 0};
+					return (Color) {253, 54, 23};
 				case 1:
-					return (Color) {150, 0, 0};
+					return (Color) {255, 108, 46};
 				default:
-					return (Color) {255, 0, 0};
+					return (Color) {253, 54, 23};
 			}
 		case BURNT:
-			return (Color) {100, 100, 100};
+			return (Color) {78, 78, 78};
 	}
 }

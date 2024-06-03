@@ -60,3 +60,4 @@ grid.json
 
 # Misc
 .idea
+.vscode/c_cpp_properties.json
