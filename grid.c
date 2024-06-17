@@ -27,8 +27,6 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 
 	if (access("grid.json", F_OK) == 0) {
 		// The json file exists
-		printf("Reading grid.json\n");
-
 		cJSON * grid_json = cJSON_Parse(readfile(fopen("grid.json", "r")));
 		cJSON * grid_json_object = cJSON_GetObjectItem(grid_json, "grid");
 
@@ -41,11 +39,7 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 				grid.data[i][j].state = 0;
 			}
 		}
-
-		printf("grid.json read\n");
 	} else {
-		printf("Creating random grid\n");
-
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				// Just for OwO purposes
@@ -55,8 +49,6 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 				grid.data[i][j].state = 0;
 			}
 		}
-
-		printf("Random grid created\n");
 	}
 
 	return grid;
