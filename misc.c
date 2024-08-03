@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 int max(int a, int b) {
 	return a > b ? a : b;
@@ -34,4 +34,8 @@ char * readfile(FILE * f) {
 	buffer[ulength] = '\0'; // Now buffer points to a string
 
 	return buffer;
+}
+
+int get_random(int max) {
+	return (int) (random() % max);
 }
