@@ -17,7 +17,7 @@
  * @return The exit code
  */
 int main(int argc, char * argv[]) {
-	// Command syntax main --model [model] --count [count] --help --tick [ms]
+	// Command arguments management
 	int model = 0;
 	int count = 1;
 	int tick_ms = 10;
@@ -48,9 +48,6 @@ int main(int argc, char * argv[]) {
 
 	srandom(time(NULL));
 
-	int remaining = count;
-	Grid * grids = malloc(count * sizeof(*grids));
-
 	if (tick_ms < 2) {
 		printf("Invalid tick, setting to 2\n");
 		tick_ms = 2;
@@ -61,6 +58,10 @@ int main(int argc, char * argv[]) {
 		count = 1;
 	}
 
+	int remaining = count;
+	Grid * grids = malloc(count * sizeof(*grids));
+
+	// Choose the number of grids to display per line and per column
 	int max_x;
 	int max_y;
 	if (count == 1) {
@@ -83,12 +84,14 @@ int main(int argc, char * argv[]) {
 		max_y = 7;
 	}
 
+	// Create the window and the grids
 	Window window = create_window(max_x, max_y);
 
 	for (int i = 0; i < count; i++) {
 		grids[i] = create_grid(model, window, i % max_x, i / max_x);
 	}
 
+	// Main loop to update the grids and tick until all grids have ended
 	do {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -103,11 +106,13 @@ int main(int argc, char * argv[]) {
 			}
 		}
 
+		// Update the grids
 		for (int i = 0; i < count; i++) {
 			if (!grids[i].ended) {
 				tick(&grids[i]);
 
 				grids[i].ended = is_ended(grids[i]);
+				// If the grid has ended, we decrease the number of remaining grids
 				if (grids[i].ended) {
 					remaining--;
 				}
@@ -119,6 +124,7 @@ int main(int argc, char * argv[]) {
 
 	wait(2500);
 
+	// Free the memory and close the window
 	for (int i = 0; i < count; i++) {
 		destroy_grid(grids[i]);
 	}

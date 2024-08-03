@@ -56,6 +56,7 @@ const int M1_PROBA_STATE_CHANGE = 16;
  * @return The created grid
  */
 Grid create_grid(int model, Window window, int coord_x, int coord_y) {
+	// Create the grid
 	Grid grid = {
 			.data = (Tile **) malloc(GRID_SIZE * sizeof(*grid.data)),
 			.window = window,
@@ -65,28 +66,35 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 			.coord_y = coord_y
 	};
 
+	// Initialize the grid
 	for (int i = 0; i < GRID_SIZE; i++) {
 		grid.data[i] = (Tile *) malloc(GRID_SIZE * sizeof(*grid.data[i]));
 	}
 
+	// Load the grid from a json file if it exists, otherwise create a random grid
 	if (access("grid.json", F_OK) == 0) {
-		// The json file exists
+		// The json file exists, we load the grid from it
 		cJSON * grid_json = cJSON_Parse(readfile(fopen("grid.json", "r")));
 		cJSON * grid_json_object = cJSON_GetObjectItem(grid_json, "grid");
 
 		for (int i = 0; i < GRID_SIZE; i++) {
 			cJSON * row = cJSON_GetArrayItem(grid_json_object, i);
 			for (int j = 0; j < GRID_SIZE; j++) {
+				// Get the value of the tile and set it to the grid
 				int value = cJSON_GetArrayItem(row, j)->valueint;
+
 				grid.data[i][j].current_type = value;
 				grid.data[i][j].default_type = value;
 				grid.data[i][j].state = 0;
 			}
 		}
 	} else {
+		// The json file does not exist, we create a random grid
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
+				// Get a random value between 0 and 3 and set it to the grid
 				int value = get_random(4);
+
 				grid.data[i][j].current_type = value;
 				grid.data[i][j].default_type = value;
 				grid.data[i][j].state = 0;
@@ -104,8 +112,10 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
  * @return The copied grid
  */
 Tile ** copy_grid(Tile ** data) {
+	// Malloc the copy of the grid
 	Tile ** copy = (Tile **) malloc(GRID_SIZE * sizeof(*copy));
 
+	// Fill the copy with the data of the grid
 	for (int i = 0; i < GRID_SIZE; i++) {
 		copy[i] = (Tile *) malloc(GRID_SIZE * sizeof(*copy[i]));
 		memcpy(copy[i], data[i], GRID_SIZE * sizeof(*copy[i]));
@@ -179,9 +189,9 @@ bool is_valid(Point point) {
  */
 bool is_ended(Grid grid) {
 	if (grid.model == 0 || grid.model == 1) {
-		// TODO :O
 		bool is_fire = false;
 
+		// Check if there is no more fire, if there is no more fire, the grid is ended
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				if (grid.data[i][j].current_type == FIRE) {
@@ -224,6 +234,7 @@ bool check_probability(Grid * grid, Point point, TileType type, int proba) {
  */
 void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbours, int tree_burn, int grass_burn,
 				   int state_change) {
+	// First step, change the state of the neighbours based on the probability
 	for (int k = 0; k < 4; k++) {
 		if (is_valid(neighbours[k])) {
 			if (check_probability(grid, neighbours[k], TREE, tree_burn) ||
@@ -236,10 +247,12 @@ void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbours, i
 		}
 	}
 
+	// Second step, change the state of the point based on the probability to a new state or to burnt
 	Tile point_tile = get_tile(*grid, point);
 	if (check_probability(grid, point, FIRE, state_change)) {
 		Tile * tile_copy = &copy[point.x][point.y];
 
+		// If the tile is newly on fire, we increment the state of the tile, otherwise we set it to burnt
 		if (point_tile.state == 0) {
 			tile_copy->state++;
 		} else {
@@ -259,16 +272,19 @@ void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbours, i
 void tick(Grid * grid) {
 	Tile ** copy = copy_grid(grid->data);
 
+	// Update the grid based on the model
 	if (grid->model == 0) {
 		// MODEL 0 -> 4 neighbours
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				Point point = (Point) {i, j};
 
+				// If the tile is not on fire, we continue
 				if (get_tile(*grid, point).current_type != FIRE) {
 					continue;
 				}
 
+				// Apply the rules to the cell
 				apply_to_cell(grid, copy, point, get_direct_neighbours(grid, point), M0_PROBA_TREE_BURN,
 							  M0_PROBA_GRASS_BURN,
 							  M0_PROBA_STATE_CHANGE);
@@ -286,10 +302,12 @@ void tick(Grid * grid) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				Point point = (Point) {i, j};
 
+				// If the tile is not on fire, we continue
 				if (get_tile(*grid, point).current_type != FIRE) {
 					continue;
 				}
 
+				// Apply the rules to the cell
 				apply_to_cell(grid, copy, point, get_direct_neighbours(grid, point), M1_C_PROBA_TREE_BURN,
 							  M1_C_PROBA_GRASS_BURN,
 							  M1_PROBA_STATE_CHANGE);
@@ -316,6 +334,7 @@ void tick(Grid * grid) {
  * @param grid The grid to destroy
  */
 void destroy_grid(Grid grid) {
+	// Free the data of the grid
 	for (int i = 0; i < GRID_SIZE; i++) {
 		free(grid.data[i]);
 	}

@@ -11,13 +11,16 @@
  * @param update Whether to update the window (ie to display the pixel)
  */
 void draw_pixel(Window window, Point point, Color color, bool update) {
+	// If the point is outside the window, do nothing
 	if (point.x < 0 || point.x >= window.surface->w || point.y < 0 || point.y >= window.surface->h) {
 		return;
 	}
 
+	// Get the pixel at the point and set its color
 	Uint32 * pixel = (Uint32 *) window.surface->pixels + point.y * window.surface->pitch / 4 + point.x;
 	*pixel = SDL_MapRGB(window.surface->format, color.r, color.g, color.b);
 
+	// If we want to update the window, we update it
 	if (update) {
 		SDL_UpdateWindowSurface(window.window);
 	}
@@ -33,12 +36,15 @@ void draw_pixel(Window window, Point point, Color color, bool update) {
  * @param update Whether to update the window (ie to display the square)
  */
 void draw_square(Window window, Point point, int size, Color color, bool update) {
+	// Draw a square of pixels
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size; j++) {
+			// Draw the pixel
 			draw_pixel(window, (Point) {point.x + i, point.y + j}, color, false);
 		}
 	}
 
+	// If we want to update the window, we update it
 	if (update) {
 		SDL_UpdateWindowSurface(window.window);
 	}
@@ -51,15 +57,19 @@ void draw_square(Window window, Point point, int size, Color color, bool update)
  * @param grid The grid to draw
  */
 void draw_grid(Window window, Grid grid) {
+	// Draw the grid using the constants defined in typings.c, and translate the grid to the right position
 	for (int i = 0; i < GRID_SIZE; i++) {
 		for (int j = 0; j < GRID_SIZE; j++) {
 			Tile tile = grid.data[i][j];
+
+			// Draw the tile as a square
 			draw_square(window, (Point) {TILE_SIZE * (i + (GRID_SIZE + 1) * grid.coord_x),
 										 TILE_SIZE * (j + (GRID_SIZE + 1) * grid.coord_y)}, TILE_SIZE,
 						get_color(tile.current_type, tile.state), false);
 		}
 	}
 
+	// Update the window to display the grid
 	SDL_UpdateWindowSurface(window.window);
 }
 
@@ -71,18 +81,23 @@ void draw_grid(Window window, Grid grid) {
  * @return The window
  */
 Window create_window(int max_x, int max_y) {
+	// The window and the surface of the window
 	Window window = {
 			.window = NULL,
 			.surface = NULL
 	};
 
+	// Define the size of the tiles based on the number of grids (to ensure that the window is not too big)
 	TILE_SIZE = 8 - (1.5) * min(max_y - 1, 4);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		// SDL initialization failed
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+		exit(1);
 	} else {
+		// Create the window
 		window.window = SDL_CreateWindow(
-				"TIPE :O",
+				"TIPE",
 				SDL_WINDOWPOS_UNDEFINED,
 				SDL_WINDOWPOS_UNDEFINED,
 				(max_x * (GRID_SIZE + 1) - 1) * TILE_SIZE,
@@ -91,7 +106,9 @@ Window create_window(int max_x, int max_y) {
 		);
 
 		if (window.window == NULL) {
+			// Window creation failed
 			printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+			exit(1);
 		} else {
 			window.surface = SDL_GetWindowSurface(window.window);
 		}
@@ -115,6 +132,7 @@ void wait(int ms) {
  * @param window The window to destroy
  */
 void destroy_window(Window window) {
+	// Destroy the window and quit SDL
 	SDL_DestroyWindow(window.window);
 	SDL_Quit();
 }

@@ -31,14 +31,14 @@ int min(int a, int b) {
  * @return The content of the file
  */
 char * readfile(FILE * file) {
-	// f invalid? fseek() fail?
+	// Check if the file is null or if the seek failed
 	if (file == NULL || fseek(file, 0, SEEK_END)) {
 		return NULL;
 	}
 
 	long length = ftell(file);
 	rewind(file);
-	// Did ftell() fail?  Is the length too long?
+	// Check if the length is invalid
 	if (length == -1 || (unsigned long) length >= SIZE_MAX) {
 		return NULL;
 	}
@@ -46,12 +46,13 @@ char * readfile(FILE * file) {
 	// Convert from long to size_t
 	size_t ulength = (size_t) length;
 	char * buffer = malloc(ulength + 1);
-	// Allocation failed? Read incomplete?
+	// Check if the buffer is null or if the read failed
 	if (buffer == NULL || fread(buffer, 1, ulength, file) != ulength) {
 		free(buffer);
 		return NULL;
 	}
-	buffer[ulength] = '\0'; // Now buffer points to a string
+	// Finish the string
+	buffer[ulength] = '\0';
 
 	return buffer;
 }
