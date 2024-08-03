@@ -2,6 +2,14 @@
 #include "typings.c"
 #include "misc.c"
 
+/**
+ * Draw a pixel on the window
+ *
+ * @param window The window to draw on
+ * @param point The point to draw
+ * @param color The color of the pixel
+ * @param update Whether to update the window (ie to display the pixel)
+ */
 void draw_pixel(Window window, Point point, Color color, bool update) {
 	if (point.x < 0 || point.x >= window.surface->w || point.y < 0 || point.y >= window.surface->h) {
 		return;
@@ -15,6 +23,15 @@ void draw_pixel(Window window, Point point, Color color, bool update) {
 	}
 }
 
+/**
+ * Draw a square on the window
+ *
+ * @param window The window to draw on
+ * @param point The top-left corner of the square
+ * @param size The size of the square
+ * @param color The color of the square
+ * @param update Whether to update the window (ie to display the square)
+ */
 void draw_square(Window window, Point point, int size, Color color, bool update) {
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size; j++) {
@@ -27,6 +44,12 @@ void draw_square(Window window, Point point, int size, Color color, bool update)
 	}
 }
 
+/**
+ * Draw the grid on the window
+ *
+ * @param window The window to draw on
+ * @param grid The grid to draw
+ */
 void draw_grid(Window window, Grid grid) {
 	for (int i = 0; i < GRID_SIZE; i++) {
 		for (int j = 0; j < GRID_SIZE; j++) {
@@ -40,6 +63,13 @@ void draw_grid(Window window, Grid grid) {
 	SDL_UpdateWindowSurface(window.window);
 }
 
+/**
+ * Create a window
+ *
+ * @param max_x The maximum number of grids on the x axis
+ * @param max_y The maximum number of grids on the y axis
+ * @return The window
+ */
 Window create_window(int max_x, int max_y) {
 	Window window = {
 			.window = NULL,
@@ -70,10 +100,20 @@ Window create_window(int max_x, int max_y) {
 	return window;
 }
 
+/**
+ * Wait for a certain amount of time
+ *
+ * @param ms The number of milliseconds to wait
+ */
 void wait(int ms) {
 	SDL_Delay(ms);
 }
 
+/**
+ * Destroy a window
+ *
+ * @param window The window to destroy
+ */
 void destroy_window(Window window) {
 	SDL_DestroyWindow(window.window);
 	SDL_Quit();

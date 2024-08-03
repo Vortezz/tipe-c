@@ -1,6 +1,21 @@
 #include <time.h>
 #include "grid.c"
 
+/**
+ * Main function of the program
+ * <p>
+ * The program can be launched with the following arguments:
+ * <ul>
+ * <li>--model [model]: The model of the grid (0 or 1)</li>
+ * <li>--count [count]: The number of grids to simulate</li>
+ * <li>--tick [ms]: The number of milliseconds between each tick</li>
+ * <li>--help: Display the help message</li>
+ * </ul>
+ * </p>
+ * @param argc The number of arguments
+ * @param argv The arguments
+ * @return The exit code
+ */
 int main(int argc, char * argv[]) {
 	// Command syntax main --model [model] --count [count] --help --tick [ms]
 	int model = 0;
@@ -22,7 +37,8 @@ int main(int argc, char * argv[]) {
 					tick_ms = atoi(argv[i + 1]);
 				}
 			} else if (strcmp(argv[i], "--help") == 0) {
-				printf("Usage: %s --model [model] --count [count] --tick [ms] --help\n", argv[0]);
+				printf("Usage: %s --model [model] --count [count] --tick [ms] --help\n\nArguments:\n--model [model]: The model of the grid (0 or 1)\n--count [count]: The number of grids to simulate\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n",
+					   argv[0]);
 				return 0;
 			}
 		}

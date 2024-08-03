@@ -7,16 +7,54 @@
  *
  * The following probabilities are 1 / [number]
  */
+/**
+ * The probability for a tree tile to burn
+ */
 const int M0_PROBA_TREE_BURN = 8;
+/**
+ * The probability for a grass tile to burn
+ */
 const int M0_PROBA_GRASS_BURN = 8;
+/**
+ * The probability for a tile to change state between fire and burnt
+ */
 const int M0_PROBA_STATE_CHANGE = 16;
 
+/**
+ * Model 1 constants
+ *
+ * The following probabilities are 1 / [number]
+ */
+/**
+ * The probability for a tree tile to burn (in direct neighbours)
+ */
 const int M1_C_PROBA_TREE_BURN = 8;
+/**
+ * The probability for a grass tile to burn (in direct neighbours)
+ */
 const int M1_C_PROBA_GRASS_BURN = 8;
+/**
+ * The probability for a tree tile to burn (in diagonal neighbours)
+ */
 const int M1_D_PROBA_TREE_BURN = 4;
+/**
+ * The probability for a grass tile to burn (in diagonal neighbours)
+ */
 const int M1_D_PROBA_GRASS_BURN = 4;
+/**
+ * The probability for a tile to change state between fire and burnt
+ */
 const int M1_PROBA_STATE_CHANGE = 16;
 
+/**
+ * Create a grid
+ *
+ * @param model The model of the grid
+ * @param window The window to draw the grid
+ * @param coord_x The x coordinate of the grid
+ * @param coord_y The y coordinate of the grid
+ * @return The created grid
+ */
 Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	Grid grid = {
 			.data = (Tile **) malloc(GRID_SIZE * sizeof(*grid.data)),
@@ -24,7 +62,8 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 			.model = model,
 			.ended = false,
 			.coord_x = coord_x,
-			.coord_y = coord_y};
+			.coord_y = coord_y
+	};
 
 	for (int i = 0; i < GRID_SIZE; i++) {
 		grid.data[i] = (Tile *) malloc(GRID_SIZE * sizeof(*grid.data[i]));
@@ -58,6 +97,12 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 	return grid;
 }
 
+/**
+ * Copy a grid
+ *
+ * @param data The grid to copy
+ * @return The copied grid
+ */
 Tile ** copy_grid(Tile ** data) {
 	Tile ** copy = (Tile **) malloc(GRID_SIZE * sizeof(*copy));
 
@@ -69,11 +114,25 @@ Tile ** copy_grid(Tile ** data) {
 	return copy;
 }
 
+/**
+ * Get the tile at a point
+ *
+ * @param grid The grid
+ * @param point The point
+ * @return The tile at the point
+ */
 Tile get_tile(Grid grid, Point point) {
 	return grid.data[point.x][point.y];
 }
 
-Point * get_direct_neighbours(Grid * grid, Point point) {
+/**
+ * Get the neighbours of a point (according to the model)
+ *
+ * @param grid The grid
+ * @param point The point
+ * @return The neighbours of the point
+ */
+Point * get_neighbours(Grid * grid, Point point) {
 	if (grid->model == 0) {
 		Point * neighbours = (Point *) malloc(4 * sizeof(*neighbours));
 
@@ -103,10 +162,22 @@ Point * get_direct_neighbours(Grid * grid, Point point) {
 	}
 }
 
+/**
+ * Check if a point is valid (ie inside the grid)
+ *
+ * @param point The point to check
+ * @return True if the point is valid, false otherwise
+ */
 bool is_valid(Point point) {
 	return point.x >= 0 && point.x < GRID_SIZE && point.y >= 0 && point.y < GRID_SIZE;
 }
 
+/**
+ * Check if the grid is ended
+ *
+ * @param grid The grid to check
+ * @return True if the grid is ended, false otherwise
+ */
 bool is_ended(Grid grid) {
 	if (grid.model == 0 || grid.model == 1) {
 		// TODO :O
@@ -128,6 +199,11 @@ bool is_ended(Grid grid) {
 	}
 }
 
+/**
+ * Update the grid
+ *
+ * @param grid The grid to update
+ */
 void tick(Grid * grid) {
 	Tile ** copy = copy_grid(grid->data);
 
@@ -141,7 +217,7 @@ void tick(Grid * grid) {
 					continue;
 				}
 
-				Point * neighbours = get_direct_neighbours(grid, point);
+				Point * neighbours = get_neighbours(grid, point);
 
 				for (int k = 0; k < 4; k++) {
 					if (is_valid(neighbours[k])) {
@@ -183,7 +259,7 @@ void tick(Grid * grid) {
 					continue;
 				}
 
-				Point * neighbours = get_direct_neighbours(grid, point);
+				Point * neighbours = get_neighbours(grid, point);
 
 				for (int k = 0; k < 4; k++) { // côtés
 					if (is_valid(neighbours[k])) {
@@ -211,7 +287,7 @@ void tick(Grid * grid) {
 
 				free(neighbours);
 
-				if (get_tile(*grid, point).current_type == FIRE && get_random(M0_PROBA_STATE_CHANGE) == 0) {
+				if (get_tile(*grid, point).current_type == FIRE && get_random(M1_PROBA_STATE_CHANGE) == 0) {
 					if (get_tile(*grid, point).state == 0) {
 						copy[point.x][point.y].state++;
 					} else {
@@ -233,6 +309,11 @@ void tick(Grid * grid) {
 	}
 }
 
+/**
+ * Destroy a grid
+ *
+ * @param grid The grid to destroy
+ */
 void destroy_grid(Grid grid) {
 	for (int i = 0; i < GRID_SIZE; i++) {
 		free(grid.data[i]);
