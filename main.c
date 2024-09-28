@@ -8,6 +8,8 @@
  * <ul>
  * <li>--model [model]: The model of the grid (0 or 1)</li>
  * <li>--count [count]: The number of grids to simulate</li>
+ * <li>--iterations [iterations]: The max number of iterations</li>
+ * <li>--enable_graphics [0/1]: Whether graphics are disabled</li>
  * <li>--tick [ms]: The number of milliseconds between each tick</li>
  * <li>--help: Display the help message</li>
  * </ul>
@@ -20,7 +22,9 @@ int main(int argc, char * argv[]) {
 	// Command arguments management
 	int model = 0;
 	int count = 1;
+	int iterations = -1;
 	int tick_ms = 10;
+	bool enable_graphics = true;
 
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
@@ -32,19 +36,28 @@ int main(int argc, char * argv[]) {
 				if (i + 1 < argc) {
 					count = atoi(argv[i + 1]);
 				}
+			} else if (strcmp(argv[i], "--iterations") == 0) {
+				if (i + 1 < argc) {
+					iterations = atoi(argv[i + 1]);
+				}
 			} else if (strcmp(argv[i], "--tick") == 0) {
 				if (i + 1 < argc) {
 					tick_ms = atoi(argv[i + 1]);
 				}
+			} else if (strcmp(argv[i], "--enable_graphics") == 0) {
+				if (i + 1 < argc) {
+					enable_graphics = atoi(argv[i + 1]);
+				}
 			} else if (strcmp(argv[i], "--help") == 0) {
-				printf("Usage: %s --model [model] --count [count] --tick [ms] --help\n\nArguments:\n--model [model]: The model of the grid (0 or 1)\n--count [count]: The number of grids to simulate\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n",
+				printf("Usage: %s --model [model] --count [count] --iterations [iterations] --enable_graphics [0/1] --tick [ms] --help\n\nArguments:\n--model [model]: The model of the grid (0 or 1)\n--count [count]: The number of grids to simulate\n--iterations [iterations]: The max number of iterations\n--enable_graphics [0/1]: Whether graphics are disabled\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n",
 					   argv[0]);
 				return 0;
 			}
 		}
 	}
 
-	printf("Launching simulation with model %d and count %d\n", model, count);
+	printf("Launching simulation\nModel %d\nCount %d\nIterations %d\nGraphics %d\n", model, count, iterations,
+		   enable_graphics);
 
 	srandom(time(NULL));
 
@@ -85,7 +98,15 @@ int main(int argc, char * argv[]) {
 	}
 
 	// Create the window and the grids
-	Window window = create_window(max_x, max_y);
+	Window window;
+	if (enable_graphics) {
+		window = create_window(max_x, max_y);
+	} else {
+		window = (Window) {
+				.window = NULL,
+				.surface = NULL
+		};
+	}
 
 	for (int i = 0; i < count; i++) {
 		grids[i] = create_grid(model, window, i % max_x, i / max_x);
@@ -120,16 +141,20 @@ int main(int argc, char * argv[]) {
 		}
 
 		wait(tick_ms);
-	} while (remaining > 0);
+	} while (remaining > 0 && --iterations != 0);
 
 	wait(2500);
+
+	// DO SOMETHING WITH GRIDS IF NEEDED
 
 	// Free the memory and close the window
 	for (int i = 0; i < count; i++) {
 		destroy_grid(grids[i]);
 	}
 
-	destroy_window(window);
+	if (enable_graphics) {
+		destroy_window(window);
+	}
 	free(grids);
 
 	return 0;

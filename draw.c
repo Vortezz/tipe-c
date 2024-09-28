@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <unistd.h>
 #include "typings.c"
 #include "misc.c"
 
@@ -57,6 +58,11 @@ void draw_square(Window window, Point point, int size, Color color, bool update)
  * @param grid The grid to draw
  */
 void draw_grid(Window window, Grid grid) {
+	// Graphics not enabled
+	if (!window.window) {
+		return;
+	}
+
 	// Draw the grid using the constants defined in typings.c, and translate the grid to the right position
 	for (int i = 0; i < GRID_SIZE; i++) {
 		for (int j = 0; j < GRID_SIZE; j++) {
@@ -123,7 +129,7 @@ Window create_window(int max_x, int max_y) {
  * @param ms The number of milliseconds to wait
  */
 void wait(int ms) {
-	SDL_Delay(ms);
+	usleep(ms * 1000);
 }
 
 /**
