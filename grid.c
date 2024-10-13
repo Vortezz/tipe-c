@@ -1,6 +1,8 @@
 #include "draw.c"
 #include <cjson/cJSON.h>
 #include <unistd.h>
+#include <png.h>
+#include <sys/stat.h>
 
 /**
  * Model 0 constants
@@ -46,6 +48,8 @@ const int M1_D_PROBA_GRASS_BURN = 16;
  */
 const int M1_PROBA_STATE_CHANGE = 16;
 
+void write_to_file(Grid grid);
+
 /**
  * Create a grid
  *
@@ -55,7 +59,7 @@ const int M1_PROBA_STATE_CHANGE = 16;
  * @param coord_y The y coordinate of the grid
  * @return The created grid
  */
-Grid create_grid(int model, Window window, int coord_x, int coord_y) {
+Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export_csv, bool export_png) {
 	// Create the grid
 	Grid grid = {
 			.data = (Tile **) malloc(GRID_SIZE * sizeof(*grid.data)),
@@ -63,7 +67,9 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y) {
 			.model = model,
 			.ended = false,
 			.coord_x = coord_x,
-			.coord_y = coord_y
+			.coord_y = coord_y,
+			.export_csv = export_csv,
+			.export_png = export_png
 	};
 
 	// Initialize the grid
@@ -329,11 +335,115 @@ void tick(Grid * grid) {
 }
 
 /**
+ * Write to png file
+ *
+ * @param grid The grid to write
+ */
+void write_png(Grid grid) {
+	struct stat st = {0};
+	if (stat("grids_png", &st) == -1) {
+		mkdir("grids_png", 0700);
+	}
+
+	char * file_name = malloc(100 * sizeof(*file_name));
+	sprintf(file_name, "grids_png/grid-%d-%d.png", grid.coord_x, grid.coord_y);
+
+	FILE * fp = fopen(file_name, "wb");
+	if (!fp) {
+		fprintf(stderr, "Failed to open file %s for writing\n", file_name);
+		return;
+	}
+
+	png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png) {
+		fprintf(stderr, "Failed to create png write struct\n");
+		fclose(fp);
+		return;
+	}
+
+	png_infop info = png_create_info_struct(png);
+	if (!info) {
+		fprintf(stderr, "Failed to create png info struct\n");
+		png_destroy_write_struct(&png, NULL);
+		fclose(fp);
+		return;
+	}
+
+	if (setjmp(png_jmpbuf(png))) { // To handle errors
+		printf("Error during png creation\n");
+		png_destroy_write_struct(&png, &info);
+		fclose(fp);
+		return;
+	}
+
+	png_init_io(png, fp);
+
+	// Write the header (8-bit color depth, RGB format)
+	png_set_IHDR(png, info, 512, 512, 8, PNG_COLOR_TYPE_RGB,
+				 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	png_write_info(png, info);
+
+	png_bytep row = (png_bytep) malloc(3 * 512 * sizeof(png_byte));
+
+	Tile tile;
+	Color color;
+	for (int y = 0; y < 512; y++) {
+		for (int x = 0; x < 512; x++) {
+			tile = grid.data[x / TILE_SIZE][y / TILE_SIZE];
+			color = get_color(tile.current_type, tile.state);
+			row[x * 3 + 0] = color.r; // Red
+			row[x * 3 + 1] = color.g;   // Green
+			row[x * 3 + 2] = color.b;   // Blue
+		}
+		png_write_row(png, row);
+	}
+
+	// Finish writing the file
+	png_write_end(png, NULL);
+
+	// Free resources
+	fclose(fp);
+	png_destroy_write_struct(&png, &info);
+	free(row);
+
+	free(file_name);
+}
+
+/**
+ * Write to a csv file
+ *
+ * @param grid The grid to write
+ */
+void write_csv(Grid grid) {
+	FILE * fp = fopen("grids.csv", "a");
+
+	fprintf(fp, "NEW GRID\n"); // Grid Separator
+
+	for (int x = 0; x < GRID_SIZE; x++) {
+		for (int y = 0; y < GRID_SIZE; ++y) {
+			fprintf(fp, "%d-%d-%d,", grid.data[x][y].current_type, grid.data[x][y].default_type, grid.data[x][y].state);
+		}
+
+		fprintf(fp, "\n");
+	}
+
+	fclose(fp);
+}
+
+/**
  * Destroy a grid
  *
  * @param grid The grid to destroy
  */
 void destroy_grid(Grid grid) {
+	if (grid.export_png) {
+		write_png(grid);
+	}
+
+	if (grid.export_csv) {
+		write_csv(grid);
+	}
+
 	// Free the data of the grid
 	for (int i = 0; i < GRID_SIZE; i++) {
 		free(grid.data[i]);

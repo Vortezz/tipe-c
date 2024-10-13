@@ -132,6 +132,14 @@ typedef struct {
 	 * The y coordinate of the grid
 	 */
 	int coord_y;
+	/**
+	 * Whether to save the content into a png file
+	 */
+	bool export_png;
+	/**
+	 * Whether to save the content into a csv file
+	 */
+	bool export_csv;
 } Grid;
 
 /**

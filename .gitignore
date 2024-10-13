@@ -57,6 +57,7 @@ cmake-build-debug
 # Build related
 main
 grid.json
+/grids_png
 
 # Misc
 .idea

@@ -11,6 +11,8 @@
  * <li>--iterations [iterations]: The max number of iterations</li>
  * <li>--enable_graphics [0/1]: Whether graphics are disabled</li>
  * <li>--tick [ms]: The number of milliseconds between each tick</li>
+ * <li>--export_csv: Export grids in csv format</li>
+ * <li>--export_png: Export grids in png format</li>
  * <li>--help: Display the help message</li>
  * </ul>
  * </p>
@@ -25,6 +27,8 @@ int main(int argc, char * argv[]) {
 	int iterations = -1;
 	int tick_ms = 10;
 	bool enable_graphics = true;
+	bool export_csv = false;
+	bool export_png = false;
 
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
@@ -52,6 +56,10 @@ int main(int argc, char * argv[]) {
 				printf("Usage: %s --model [model] --count [count] --iterations [iterations] --enable_graphics [0/1] --tick [ms] --help\n\nArguments:\n--model [model]: The model of the grid (0 or 1)\n--count [count]: The number of grids to simulate\n--iterations [iterations]: The max number of iterations\n--enable_graphics [0/1]: Whether graphics are disabled\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n",
 					   argv[0]);
 				return 0;
+			} else if (strcmp(argv[i], "--export_csv") == 0) {
+				export_csv = true;
+			} else if (strcmp(argv[i], "--export_png") == 0) {
+				export_png = true;
 			}
 		}
 	}
@@ -97,6 +105,9 @@ int main(int argc, char * argv[]) {
 		max_y = 7;
 	}
 
+	remove("grids.csv");
+	remove("grids_png");
+
 	// Create the window and the grids
 	Window window;
 	if (enable_graphics) {
@@ -109,7 +120,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	for (int i = 0; i < count; i++) {
-		grids[i] = create_grid(model, window, i % max_x, i / max_x);
+		grids[i] = create_grid(model, window, i % max_x, i / max_x, export_csv, export_png);
 	}
 
 	// Main loop to update the grids and tick until all grids have ended
