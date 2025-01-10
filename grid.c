@@ -28,19 +28,19 @@ const int M0_PROBA_STATE_CHANGE = 16;
  * The following probabilities are 1 / [number]
  */
 /**
- * The probability for a tree tile to burn (in direct neighbours)
+ * The probability for a tree tile to burn (in direct neighbors)
  */
 const int M1_C_PROBA_TREE_BURN = 8;
 /**
- * The probability for a grass tile to burn (in direct neighbours)
+ * The probability for a grass tile to burn (in direct neighbors)
  */
 const int M1_C_PROBA_GRASS_BURN = 8;
 /**
- * The probability for a tree tile to burn (in diagonal neighbours)
+ * The probability for a tree tile to burn (in diagonal neighbors)
  */
 const int M1_D_PROBA_TREE_BURN = 16;
 /**
- * The probability for a grass tile to burn (in diagonal neighbours)
+ * The probability for a grass tile to burn (in diagonal neighbors)
  */
 const int M1_D_PROBA_GRASS_BURN = 16;
 /**
@@ -142,39 +142,39 @@ Tile get_tile(Grid grid, Point point) {
 }
 
 /**
- * Get the direct neighbours of a point
+ * Get the direct neighbors of a point
  *
  * @param grid The grid
  * @param point The point
- * @return The neighbours of the point
+ * @return The neighbors of the point
  */
-Point * get_direct_neighbours(Grid * grid, Point point) {
-	Point * neighbours = (Point *) malloc(4 * sizeof(*neighbours));
+Point * get_direct_neighbors(Grid * grid, Point point) {
+	Point * neighbors = (Point *) malloc(4 * sizeof(*neighbors));
 
-	neighbours[0] = (Point) {point.x - 1, point.y};
-	neighbours[1] = (Point) {point.x + 1, point.y};
-	neighbours[2] = (Point) {point.x, point.y - 1};
-	neighbours[3] = (Point) {point.x, point.y + 1};
+	neighbors[0] = (Point) {point.x - 1, point.y};
+	neighbors[1] = (Point) {point.x + 1, point.y};
+	neighbors[2] = (Point) {point.x, point.y - 1};
+	neighbors[3] = (Point) {point.x, point.y + 1};
 
-	return neighbours;
+	return neighbors;
 }
 
 /**
- * Get the diagonal neighbours of a point
+ * Get the diagonal neighbors of a point
  *
  * @param grid The grid
  * @param point The point
- * @return The neighbours of the point
+ * @return The neighbors of the point
  */
-Point * get_diagonal_neighbours(Grid * grid, Point point) {
-	Point * neighbours = (Point *) malloc(4 * sizeof(*neighbours));
+Point * get_diagonal_neighbors(Grid * grid, Point point) {
+	Point * neighbors = (Point *) malloc(4 * sizeof(*neighbors));
 
-	neighbours[0] = (Point) {point.x - 1, point.y - 1};
-	neighbours[1] = (Point) {point.x + 1, point.y - 1};
-	neighbours[2] = (Point) {point.x - 1, point.y + 1};
-	neighbours[3] = (Point) {point.x + 1, point.y + 1};
+	neighbors[0] = (Point) {point.x - 1, point.y - 1};
+	neighbors[1] = (Point) {point.x + 1, point.y - 1};
+	neighbors[2] = (Point) {point.x - 1, point.y + 1};
+	neighbors[3] = (Point) {point.x + 1, point.y + 1};
 
-	return neighbours;
+	return neighbors;
 }
 
 /**
@@ -194,7 +194,7 @@ bool is_valid(Point point) {
  * @return True if the grid is ended, false otherwise
  */
 bool is_ended(Grid grid) {
-	if (grid.model == 0 || grid.model == 1) {
+	if (grid.model == 0 || grid.model == 1 || grid.model == 2) {
 		bool is_fire = false;
 
 		// Check if there is no more fire, if there is no more fire, the grid is ended
@@ -233,19 +233,19 @@ bool check_probability(Grid * grid, Point point, TileType type, int proba) {
  * @param grid The grid
  * @param copy The copy of the grid
  * @param point The point to apply the rules to
- * @param neighbours The neighbours of the point
+ * @param neighbors The neighbors of the point
  * @param tree_burn The probability for a tree tile to burn
  * @param grass_burn The probability for a grass tile to burn
  * @param state_change The probability for a tile to change state between fire and burnt
  */
-void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbours, int tree_burn, int grass_burn,
+void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbors, int tree_burn, int grass_burn,
 				   int state_change) {
-	// First step, change the state of the neighbours based on the probability
+	// First step, change the state of the neighbors based on the probability
 	for (int k = 0; k < 4; k++) {
-		if (is_valid(neighbours[k])) {
-			if (check_probability(grid, neighbours[k], TREE, tree_burn) ||
-				check_probability(grid, neighbours[k], GRASS, grass_burn)) {
-				Tile * tile_copy = &copy[neighbours[k].x][neighbours[k].y];
+		if (is_valid(neighbors[k])) {
+			if (check_probability(grid, neighbors[k], TREE, tree_burn) ||
+				check_probability(grid, neighbors[k], GRASS, grass_burn)) {
+				Tile * tile_copy = &copy[neighbors[k].x][neighbors[k].y];
 
 				tile_copy->current_type = FIRE;
 				tile_copy->state = 0;
@@ -267,7 +267,84 @@ void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbours, i
 		}
 	}
 
-	free(neighbours);
+	free(neighbors);
+}
+
+/**
+ * Get the burn probability (used for Alexandridis model)
+ *
+ * @return The burn probability
+ */
+double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
+	double p_v;
+	switch (tile.current_type) {
+		case TREE:
+			p_v = 0.3;
+			break;
+		case GRASS:
+			p_v = -0.1;
+			break;
+		case TRENCH:
+			p_v = -0.75;
+			break;
+		default:
+			p_v = -1;
+			break;
+	}
+
+	int dx = point.x - parent.x;
+	int dy = point.y - parent.y;
+	double theta = 0;
+
+	switch (dx) {
+		case 0: {
+			if (dy == 0) {
+				theta = 0; // Should not happen
+			} else if (dy == 1) {
+				theta = 90;
+			} else {
+				theta = 270;
+			}
+			break;
+		}
+		case 1: {
+			if (dy == 0) {
+				theta = 0;
+			} else if (dy == 1) {
+				theta = 45;
+			} else {
+				theta = 315;
+			}
+			break;
+		}
+		case -1: {
+			if (dy == 0) {
+				theta = 180;
+			} else if (dy == 1) {
+				theta = 135;
+			} else {
+				theta = 225;
+			}
+			break;
+		}
+	}
+
+	theta = grid->wind_direction - theta;
+
+	fprintf(stderr, "dx : %d\n", dx);
+	fprintf(stderr, "dy : %d\n", dy);
+	fprintf(stderr, "Theta : %f\n", theta);
+
+	double p_d = 0; // TODO : Implement density
+	double p_h = 0.58; // Best value is 0.58
+	double p_w =
+			exp(0.045 * grid->wind_speed) * exp(grid->wind_speed * 0.131 * (cos(theta) - 1)); // TODO : Implement wind
+	double p_s = exp(0.078 * 0 /* TODO : Add angle for slope */);
+
+	double proba = p_h * (1 + p_v) * (1 + p_d) * p_w * p_s;
+	fprintf(stderr, "Proba : %f, p_w : %f, exp1: %f, exp2: %f\n", proba, p_w, exp(0.045 * grid->wind_speed),
+			exp(grid->wind_speed * 0.131 * (cos(theta) - 1)));
+	return proba;
 }
 
 /**
@@ -280,7 +357,7 @@ void tick(Grid * grid) {
 
 	// Update the grid based on the model
 	if (grid->model == 0) {
-		// MODEL 0 -> 4 neighbours
+		// MODEL 0 -> 4 neighbors
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				Point point = (Point) {i, j};
@@ -291,7 +368,7 @@ void tick(Grid * grid) {
 				}
 
 				// Apply the rules to the cell
-				apply_to_cell(grid, copy, point, get_direct_neighbours(grid, point), M0_PROBA_TREE_BURN,
+				apply_to_cell(grid, copy, point, get_direct_neighbors(grid, point), M0_PROBA_TREE_BURN,
 							  M0_PROBA_GRASS_BURN,
 							  M0_PROBA_STATE_CHANGE);
 			}
@@ -303,7 +380,7 @@ void tick(Grid * grid) {
 
 		draw_grid(grid->window, *grid);
 	} else if (grid->model == 1) {
-		// MODEL 1 -> 8 neighbours (same as model 0 but with diagonal neighbours)
+		// MODEL 1 -> 8 neighbors (same as model 0 but with diagonal neighbors)
 		for (int i = 0; i < GRID_SIZE; i++) {
 			for (int j = 0; j < GRID_SIZE; j++) {
 				Point point = (Point) {i, j};
@@ -314,12 +391,74 @@ void tick(Grid * grid) {
 				}
 
 				// Apply the rules to the cell
-				apply_to_cell(grid, copy, point, get_direct_neighbours(grid, point), M1_C_PROBA_TREE_BURN,
+				apply_to_cell(grid, copy, point, get_direct_neighbors(grid, point), M1_C_PROBA_TREE_BURN,
 							  M1_C_PROBA_GRASS_BURN,
 							  M1_PROBA_STATE_CHANGE);
-				apply_to_cell(grid, copy, point, get_diagonal_neighbours(grid, point), M1_D_PROBA_TREE_BURN,
+				apply_to_cell(grid, copy, point, get_diagonal_neighbors(grid, point), M1_D_PROBA_TREE_BURN,
 							  M1_D_PROBA_GRASS_BURN,
 							  M1_PROBA_STATE_CHANGE);
+			}
+		}
+
+		free(grid->data);
+
+		grid->data = copy;
+
+		draw_grid(grid->window, *grid);
+	} else if (grid->model == 2) { // Alexandridis
+		for (int i = 0; i < GRID_SIZE; i++) {
+			for (int j = 0; j < GRID_SIZE; j++) {
+				Point point = (Point) {i, j};
+
+				// If the tile is not on fire, we continue to the next tile
+				Tile tile = get_tile(*grid, point);
+				if (tile.current_type != FIRE) {
+					continue;
+				}
+
+				Tile * copy_tile = &copy[point.x][point.y];
+
+				if (tile.state == 0) {
+					Point * direct_neighbors = get_direct_neighbors(grid, point);
+					Point * diagonal_neighbors = get_diagonal_neighbors(grid, point);
+
+					for (int k = 0; k < 4; k++) {
+						Point direct_point = direct_neighbors[k];
+						if (is_valid(direct_point)) {
+							Tile direct_tile = get_tile(*grid, direct_point);
+							double p_burn = get_burn_probability(direct_tile, direct_point, point, grid);
+
+							if (get_random(1000000) < p_burn * 1000000) {
+								Tile * copy_direct_tile = &copy[direct_point.x][direct_point.y];
+
+								copy_direct_tile->current_type = FIRE;
+								copy_direct_tile->state = 0;
+							}
+						}
+
+						Point diagonal_point = diagonal_neighbors[k];
+						if (is_valid(diagonal_point)) {
+							fprintf(stderr, "Diagonal point : %d-%d\n", diagonal_point.x, diagonal_point.y);
+							Tile diagonal_tile = get_tile(*grid, diagonal_point);
+							double p_burn = get_burn_probability(diagonal_tile, diagonal_point, point, grid);
+
+							if (get_random(100000) < p_burn * 100000) {
+								Tile * copy_diagonal_tile = &copy[diagonal_point.x][diagonal_point.y];
+
+								copy_diagonal_tile->current_type = FIRE;
+								copy_diagonal_tile->state = 0;
+							}
+						}
+					}
+
+					free(direct_neighbors);
+					free(diagonal_neighbors);
+
+					copy_tile->state = 1;
+				} else {
+					copy_tile->current_type = BURNT;
+					copy_tile->state = 0;
+				}
 			}
 		}
 

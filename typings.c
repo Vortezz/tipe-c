@@ -140,6 +140,14 @@ typedef struct {
 	 * Whether to save the content into a csv file
 	 */
 	bool export_csv;
+	/**
+	 * Wind direction
+	 */
+	double wind_direction;
+	/**
+	 * Wind speed
+	 */
+	double wind_speed;
 } Grid;
 
 /**
@@ -168,6 +176,8 @@ Color get_color(TileType type, int state) {
 			}
 		case BURNT:
 			return (Color) {78, 78, 78};
+		case TRENCH:
+			return (Color) {77, 5, 0};
 	}
 
 	return (Color) {0, 0, 0};

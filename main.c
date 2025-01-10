@@ -6,13 +6,15 @@
  * <p>
  * The program can be launched with the following arguments:
  * <ul>
- * <li>--model [model]: The model of the grid (0 or 1)</li>
+ * <li>--model [model]: The model of the grid (0-2)</li>
  * <li>--count [count]: The number of grids to simulate</li>
  * <li>--iterations [iterations]: The max number of iterations</li>
  * <li>--enable_graphics [0/1]: Whether graphics are disabled</li>
  * <li>--tick [ms]: The number of milliseconds between each tick</li>
  * <li>--export_csv: Export grids in csv format</li>
  * <li>--export_png: Export grids in png format</li>
+ * <li>--wind_direction [direction]: The wind direction (0 to 360)</li>
+ * <li>--wind_speed [speed]: The wind speed</li>
  * <li>--help: Display the help message</li>
  * </ul>
  * </p>
@@ -29,6 +31,8 @@ int main(int argc, char * argv[]) {
 	bool enable_graphics = true;
 	bool export_csv = false;
 	bool export_png = false;
+	double wind_direction = 0;
+	double wind_speed = 0;
 
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
@@ -53,13 +57,21 @@ int main(int argc, char * argv[]) {
 					enable_graphics = atoi(argv[i + 1]);
 				}
 			} else if (strcmp(argv[i], "--help") == 0) {
-				printf("Usage: %s --model [model] --count [count] --iterations [iterations] --enable_graphics [0/1] --tick [ms] --help\n\nArguments:\n--model [model]: The model of the grid (0 or 1)\n--count [count]: The number of grids to simulate\n--iterations [iterations]: The max number of iterations\n--enable_graphics [0/1]: Whether graphics are disabled\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n",
+				printf("Usage: %s --model [model] --count [count] --iterations [iterations] --enable_graphics [0/1] --tick [ms] --export_png --export_csv --wind_direction [direction] --wind_speed [speed] --help\n\nArguments:\n--model [model]: The model of the grid (0-2)\n--count [count]: The number of grids to simulate\n--iterations [iterations]: The max number of iterations\n--enable_graphics [0/1]: Whether graphics are disabled\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n--export_csv: Export grids in csv format\n--export_png: Export grids in png format\n--wind_direction [direction]: The wind direction (0 to 360)\n--wind_speed [speed]: The wind speed\n--help: Display the help message\n",
 					   argv[0]);
 				return 0;
 			} else if (strcmp(argv[i], "--export_csv") == 0) {
 				export_csv = true;
 			} else if (strcmp(argv[i], "--export_png") == 0) {
 				export_png = true;
+			} else if (strcmp(argv[i], "--wind_direction") == 0) {
+				if (i + 1 < argc) {
+					wind_direction = atof(argv[i + 1]);
+				}
+			} else if (strcmp(argv[i], "--wind_speed") == 0) {
+				if (i + 1 < argc) {
+					wind_speed = atof(argv[i + 1]);
+				}
 			}
 		}
 	}
@@ -121,6 +133,8 @@ int main(int argc, char * argv[]) {
 
 	for (int i = 0; i < count; i++) {
 		grids[i] = create_grid(model, window, i % max_x, i / max_x, export_csv, export_png);
+		grids[i].wind_direction = wind_direction;
+		grids[i].wind_speed = wind_speed;
 	}
 
 	// Main loop to update the grids and tick until all grids have ended
