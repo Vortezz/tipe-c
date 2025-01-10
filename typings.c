@@ -4,11 +4,11 @@
 /**
  * Represents the size of the grid
  */
-const int GRID_SIZE = 64;
+const int GRID_SIZE = 256;
 /**
  * Represents the size of a tile
  */
-int TILE_SIZE = 8;
+int TILE_SIZE = 2;
 
 /**
  * Represents a window
@@ -84,6 +84,10 @@ typedef enum {
 	 * A trench tile
 	 */
 	TRENCH,
+	/**
+	 * Just to have a size for the enum
+	 */
+	TILE_TYPE_SIZE
 } TileType;
 
 /**

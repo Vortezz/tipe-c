@@ -329,11 +329,7 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 		}
 	}
 
-	theta = grid->wind_direction - theta;
-
-	fprintf(stderr, "dx : %d\n", dx);
-	fprintf(stderr, "dy : %d\n", dy);
-	fprintf(stderr, "Theta : %f\n", theta);
+	theta = (grid->wind_direction - theta) * M_PI / 180;
 
 	double p_d = 0; // TODO : Implement density
 	double p_h = 0.58; // Best value is 0.58
@@ -341,10 +337,7 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 			exp(0.045 * grid->wind_speed) * exp(grid->wind_speed * 0.131 * (cos(theta) - 1)); // TODO : Implement wind
 	double p_s = exp(0.078 * 0 /* TODO : Add angle for slope */);
 
-	double proba = p_h * (1 + p_v) * (1 + p_d) * p_w * p_s;
-	fprintf(stderr, "Proba : %f, p_w : %f, exp1: %f, exp2: %f\n", proba, p_w, exp(0.045 * grid->wind_speed),
-			exp(grid->wind_speed * 0.131 * (cos(theta) - 1)));
-	return proba;
+	return p_h * (1 + p_v) * (1 + p_d) * p_w * p_s;
 }
 
 /**
@@ -438,7 +431,6 @@ void tick(Grid * grid) {
 
 						Point diagonal_point = diagonal_neighbors[k];
 						if (is_valid(diagonal_point)) {
-							fprintf(stderr, "Diagonal point : %d-%d\n", diagonal_point.x, diagonal_point.y);
 							Tile diagonal_tile = get_tile(*grid, diagonal_point);
 							double p_burn = get_burn_probability(diagonal_tile, diagonal_point, point, grid);
 

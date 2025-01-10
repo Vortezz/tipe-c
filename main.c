@@ -15,6 +15,7 @@
  * <li>--export_png: Export grids in png format</li>
  * <li>--wind_direction [direction]: The wind direction (0 to 360)</li>
  * <li>--wind_speed [speed]: The wind speed</li>
+ * <li>--generate_mean: Generate the mean of the grids (useful only if you export the grids)</li>
  * <li>--help: Display the help message</li>
  * </ul>
  * </p>
@@ -33,6 +34,7 @@ int main(int argc, char * argv[]) {
 	bool export_png = false;
 	double wind_direction = 0;
 	double wind_speed = 0;
+	bool generate_mean = false;
 
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
@@ -57,7 +59,7 @@ int main(int argc, char * argv[]) {
 					enable_graphics = atoi(argv[i + 1]);
 				}
 			} else if (strcmp(argv[i], "--help") == 0) {
-				printf("Usage: %s --model [model] --count [count] --iterations [iterations] --enable_graphics [0/1] --tick [ms] --export_png --export_csv --wind_direction [direction] --wind_speed [speed] --help\n\nArguments:\n--model [model]: The model of the grid (0-2)\n--count [count]: The number of grids to simulate\n--iterations [iterations]: The max number of iterations\n--enable_graphics [0/1]: Whether graphics are disabled\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n--export_csv: Export grids in csv format\n--export_png: Export grids in png format\n--wind_direction [direction]: The wind direction (0 to 360)\n--wind_speed [speed]: The wind speed\n--help: Display the help message\n",
+				printf("Usage: %s --model [model] --count [count] --iterations [iterations] --enable_graphics [0/1] --tick [ms] --export_png --export_csv --wind_direction [direction] --wind_speed [speed] --generate_mean --help\n\nArguments:\n--model [model]: The model of the grid (0-2)\n--count [count]: The number of grids to simulate\n--iterations [iterations]: The max number of iterations\n--enable_graphics [0/1]: Whether graphics are disabled\n--tick [ms]: The number of milliseconds between each tick\n--help: Display this help message\n--export_csv: Export grids in csv format\n--export_png: Export grids in png format\n--wind_direction [direction]: The wind direction (0 to 360)\n--wind_speed [speed]: The wind speed\n--generate_mean: Generate the mean of the grids (useful only if you export the grids)\n--help: Display the help message\n",
 					   argv[0]);
 				return 0;
 			} else if (strcmp(argv[i], "--export_csv") == 0) {
@@ -72,6 +74,8 @@ int main(int argc, char * argv[]) {
 				if (i + 1 < argc) {
 					wind_speed = atof(argv[i + 1]);
 				}
+			} else if (strcmp(argv[i], "--generate_mean") == 0) {
+				generate_mean = true;
 			}
 		}
 	}
@@ -171,6 +175,70 @@ int main(int argc, char * argv[]) {
 	wait(2500);
 
 	// DO SOMETHING WITH GRIDS IF NEEDED
+	if (generate_mean) {
+		int *** data = malloc(GRID_SIZE * sizeof(*data));
+		for (int i = 0; i < GRID_SIZE; i++) {
+			data[i] = (int **) malloc(GRID_SIZE * sizeof(*data[i]));
+			for (int j = 0; j < GRID_SIZE; j++) {
+				data[i][j] = malloc(TILE_TYPE_SIZE * sizeof(*data[i][j]));
+			}
+		}
+
+		for (int i = 0; i < count; i++) {
+			for (int x = 0; x < GRID_SIZE; x++) {
+				for (int y = 0; y < GRID_SIZE; y++) {
+					data[x][y][grids[i].data[x][y].current_type]++;
+				}
+			}
+		}
+
+		Tile ** tiles = malloc(GRID_SIZE * sizeof(*tiles));
+
+		for (int x = 0; x < GRID_SIZE; x++) {
+			tiles[x] = malloc(GRID_SIZE * sizeof(*tiles[x]));
+			for (int y = 0; y < GRID_SIZE; y++) {
+				tiles[x][y] = (Tile) {
+						.default_type = TILE_TYPE_SIZE,
+						.current_type = TILE_TYPE_SIZE,
+						.state = 0
+				};
+
+				int max = 0;
+				int max_type = 0;
+				for (int i = 0; i < TILE_TYPE_SIZE; i++) {
+					if (data[x][y][i] > max) {
+						max = data[x][y][i];
+						max_type = i;
+					}
+				}
+
+				tiles[x][y].current_type = max_type;
+			}
+		}
+
+		Grid grid = (Grid) {
+				.data = tiles,
+				.window = window,
+				.model = model,
+				.ended = true,
+				.coord_x = -1,
+				.coord_y = -1,
+				.export_png = export_png,
+				.export_csv = export_csv,
+				.wind_direction = wind_direction,
+				.wind_speed = wind_speed
+		};
+
+		destroy_grid(grid);
+
+		for (int i = 0; i < GRID_SIZE; i++) {
+			for (int j = 0; j < GRID_SIZE; j++) {
+				free(data[i][j]);
+			}
+			free(data[i]);
+		}
+		free(data);
+	}
 
 	// Free the memory and close the window
 	for (int i = 0; i < count; i++) {

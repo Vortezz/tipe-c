@@ -94,7 +94,7 @@ Window create_window(int max_x, int max_y) {
 	};
 
 	// Define the size of the tiles based on the number of grids (to ensure that the window is not too big)
-	TILE_SIZE = 8 - (1.5) * min(max_y - 1, 4);
+	TILE_SIZE = TILE_SIZE - (1.5) * min(max_y - 1, 4);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		// SDL initialization failed
