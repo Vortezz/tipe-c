@@ -279,6 +279,7 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 	double p_v;
 	switch (tile.current_type) {
 		case TREE:
+		case DENSE_TREE:
 			p_v = 0.3;
 			break;
 		case GRASS:
@@ -332,6 +333,10 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 	theta = (grid->wind_direction - theta) * M_PI / 180;
 
 	double p_d = 0; // TODO : Implement density
+	if (tile.current_type == DENSE_TREE) {
+		p_d = 0.3;
+	}
+
 	double p_h = 0.58; // Best value is 0.58
 	double p_w =
 			exp(0.045 * grid->wind_speed) * exp(grid->wind_speed * 0.131 * (cos(theta) - 1)); // TODO : Implement wind

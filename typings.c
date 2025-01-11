@@ -65,6 +65,10 @@ typedef enum {
 	 */
 	TREE,
 	/**
+	 * A dense tree tile
+	 */
+	DENSE_TREE,
+	/**
 	 * A water tile
 	 */
 	WATER,
@@ -165,6 +169,8 @@ Color get_color(TileType type, int state) {
 	switch (type) {
 		case TREE:
 			return (Color) {30, 81, 52};
+		case DENSE_TREE:
+			return (Color) {18, 49, 33};
 		case WATER:
 			return (Color) {113, 175, 172};
 		case GRASS:
