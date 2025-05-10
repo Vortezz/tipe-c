@@ -170,7 +170,7 @@ int main(int argc, char * argv[]) {
 		}
 
 		wait(tick_ms);
-	} while (remaining > 0 && --iterations != 0);
+	} while (remaining > 0 && --iterations != -1);
 
 	wait(2500);
 

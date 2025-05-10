@@ -286,7 +286,7 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 			p_v = -0.1;
 			break;
 		case TRENCH:
-			p_v = -0.75;
+			p_v = -0.55;
 			break;
 		default:
 			p_v = -1;
@@ -337,7 +337,7 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 		p_d = 0.3;
 	}
 
-	double p_h = 0.44; // TODO : Compute value, best value is 0.58 according to the paper
+	double p_h = 0.34; // TODO : Compute value, best value is 0.58 according to the paper
 	double p_w =
 			exp(0.045 * grid->wind_speed) * exp(grid->wind_speed * 0.131 * (cos(theta) - 1)); // TODO : Implement wind
 	double p_s = exp(0.078 * 0 /* TODO : Add angle for slope */);
@@ -425,8 +425,6 @@ void tick(Grid * grid) {
 						if (is_valid(direct_point)) {
 							Tile direct_tile = get_tile(*grid, direct_point);
 							double p_burn = get_burn_probability(direct_tile, direct_point, point, grid);
-
-							fprintf(stderr, "p_burn = %f\n", p_burn);
 
 							if (get_random(1000000) < p_burn * 1000000) {
 								Tile * copy_direct_tile = &copy[direct_point.x][direct_point.y];
