@@ -8,7 +8,8 @@
  * <ul>
  * <li>--model [model]: The model of the grid (0-2)</li>
  * <li>--count [count]: The number of grids to simulate</li>
- * <li>--iterations [iterations]: The max number of iterations</li>
+ * <li>--iterations [iterations]: The max number of iterations in one interval</li>
+ * <li>--intervals [intervals]: The max number of intervals</li>
  * <li>--enable_graphics [0/1]: Whether graphics are disabled</li>
  * <li>--tick [ms]: The number of milliseconds between each tick</li>
  * <li>--export_csv: Export grids in csv format</li>
@@ -35,6 +36,7 @@ int main(int argc, char * argv[]) {
 	double wind_direction = 0;
 	double wind_speed = 0;
 	bool generate_mean = false;
+	int intervals = 1;
 
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
@@ -76,12 +78,15 @@ int main(int argc, char * argv[]) {
 				}
 			} else if (strcmp(argv[i], "--generate_mean") == 0) {
 				generate_mean = true;
+			} else if (strcmp(argv[i], "--intervals") == 0) {
+				if (i + 1 < argc) {
+					intervals = atoi(argv[i + 1]);
+				}
 			}
 		}
 	}
 
-	printf("Launching simulation\nModel %d\nCount %d\nIterations %d\nGraphics %d\n", model, count, iterations,
-		   enable_graphics);
+	printf("Launching simulation\nModel %d\nCount %d\nIterations %d\nIntervals %d\nGraphics %d\n", model, count, iterations, intervals, enable_graphics);
 
 	srandom(time(NULL));
 
@@ -142,37 +147,56 @@ int main(int argc, char * argv[]) {
 	}
 
 	// Main loop to update the grids and tick until all grids have ended
+	int n_intervals = 0;
 	do {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			// Used to close the window if the user clicks on the close button
-			if (event.type == SDL_QUIT) {
-				for (int i = 0; i < count; i++) {
-					destroy_grid(grids[i]);
-				}
-
-				free(grids);
-				return 0;
-			}
-		}
-
-		// Update the grids
 		for (int i = 0; i < count; i++) {
-			if (!grids[i].ended) {
-				tick(&grids[i]);
-
-				grids[i].ended = is_ended(grids[i]);
-				// If the grid has ended, we decrease the number of remaining grids
-				if (grids[i].ended) {
-					remaining--;
-				}
+			if (grids[i].export_png) {
+				write_png(grids[i]);
+			}
+			
+			if (grids[i].export_csv) {
+				write_csv(grids[i]);
 			}
 		}
+		int iterations_copy = iterations;
+		do{
+			SDL_Event event;
+			while (SDL_PollEvent(&event)) {
+				// Used to close the window if the user clicks on the close button
+				if (event.type == SDL_QUIT) {
+					for (int i = 0; i < count; i++) {
+						destroy_grid(grids[i]);
+					}
 
-		wait(tick_ms);
-	} while (remaining > 0 && --iterations != -1);
+					free(grids);
+					return 0;
+				}
+				if (event.type == SDL_MOUSEBUTTONDOWN) {
+					iterations_copy = -1;
+					
+				}
+			}
 
-	wait(2500);
+			// Update the grids
+			for (int i = 0; i < count; i++) {
+				if (!grids[i].ended) {
+					tick(&grids[i]);
+
+					grids[i].ended = is_ended(grids[i]);
+					// If the grid has ended, we decrease the number of remaining grids
+					if (grids[i].ended) {
+						remaining--;
+					}
+				}
+			}
+
+			wait(tick_ms);
+		} while (--iterations_copy !=-1);
+		wait(2500);
+		for (int i = 0; i < count; i++) {
+			++grids[i].n_intervals;
+		}
+	} while (remaining > 0 && ++n_intervals < intervals);
 
 	// DO SOMETHING WITH GRIDS IF NEEDED
 	if (generate_mean) {
@@ -239,6 +263,8 @@ int main(int argc, char * argv[]) {
 		}
 		free(data);
 	}
+
+	
 
 	// Free the memory and close the window
 	for (int i = 0; i < count; i++) {

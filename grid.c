@@ -49,6 +49,10 @@ const int M1_D_PROBA_GRASS_BURN = 16;
 const int M1_PROBA_STATE_CHANGE = 16;
 
 void write_to_file(Grid grid);
+Tile ** copy_grid(Tile ** data);
+Point * get_direct_neighbors(Grid * grid, Point point);
+Point * get_diagonal_neighbors(Grid * grid, Point point);
+bool is_valid(Point point);
 
 /**
  * Create a grid
@@ -69,7 +73,8 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 			.coord_x = coord_x,
 			.coord_y = coord_y,
 			.export_csv = export_csv,
-			.export_png = export_png
+			.export_png = export_png,
+			.n_intervals = 0
 	};
 
 	// Initialize the grid
@@ -106,10 +111,56 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 				grid.data[i][j].state = 0;
 			}
 		}
+
+		for (int k = 0; k<20; ++k){
+			Tile ** copy = copy_grid(grid.data);
+			for (int i = 0; i < GRID_SIZE; i++) {
+				for (int j = 0; j < GRID_SIZE; j++) {
+					Point point = (Point) {i, j};
+					int occ[TILE_TYPE_SIZE] = {0};
+					++occ[grid.data[i][j].current_type];
+					Point* n = get_direct_neighbors(&grid, point);
+					Point* diagn = get_diagonal_neighbors(&grid, point);
+					for (int l = 0; l<4; ++l){
+						if (is_valid(n[l])){
+							TileType type1 = grid.data[n[l].x][n[l].y].current_type;
+							++occ[type1];
+						}
+						if (is_valid(diagn[l])){
+							TileType type2 = grid.data[diagn[l].x][diagn[l].y].current_type;
+							++occ[type2];
+						}
+					}
+					free(n);
+					free(diagn);
+
+					if (occ[WATER] > occ[GRASS] && occ[WATER] > occ[TREE]){
+						copy[i][j].current_type = WATER;
+						copy[i][j].default_type = WATER;
+					} else if (occ[GRASS]>occ[TREE]){
+						copy[i][j].current_type = GRASS;
+						copy[i][j].default_type = GRASS;
+					} else {
+						copy[i][j].current_type = TREE;
+						copy[i][j].default_type = TREE;
+					}
+
+				}
+			}
+			for (int i = 0; i < GRID_SIZE; ++i) {
+				free(grid.data[i]);
+			}
+			free(grid.data);
+			grid.data = copy;
+		}
+
+		
+		grid.data[GRID_SIZE/2][GRID_SIZE/2].current_type = FIRE;
+		grid.data[GRID_SIZE/2][GRID_SIZE/2].default_type = FIRE;
 	}
 
 	return grid;
-}
+};
 
 /**
  * Copy a grid
@@ -464,6 +515,24 @@ void tick(Grid * grid) {
 		grid->data = copy;
 
 		draw_grid(grid->window, *grid);
+
+	} else if (grid->model == 3) { // Rothermel
+		for (int i = 0; i < GRID_SIZE; i++) {
+			for (int j = 0; j < GRID_SIZE; j++) {
+				Point point = (Point) {i, j};
+
+				// If the tile is not on fire, we continue to the next tile
+				Tile tile = get_tile(*grid, point);
+				if (tile.current_type != FIRE) {
+					continue;
+				}
+
+
+
+
+			}
+		}
+
 	} else {
 		// Unknown model :(
 		free(copy);
@@ -482,7 +551,7 @@ void write_png(Grid grid) {
 	}
 
 	char * file_name = malloc(100 * sizeof(*file_name));
-	sprintf(file_name, "grids_png/grid-%d-%d.png", grid.coord_x, grid.coord_y);
+	sprintf(file_name, "grids_png/grid-%d-%d-%d.png", grid.coord_x, grid.coord_y, grid.n_intervals);
 
 	FILE * fp = fopen(file_name, "wb");
 	if (!fp) {
