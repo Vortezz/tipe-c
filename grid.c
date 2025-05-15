@@ -49,7 +49,7 @@ const int M1_D_PROBA_GRASS_BURN = 16;
  */
 const int M1_PROBA_STATE_CHANGE = 16;
 
-const double M3_PROBA_V_BURN = 1.;
+const double M3_PROBA_V_BURN = 1./8.;
 const double M3_PROBA_STATE_CHANGE = 1./16.;
 /**
  * Typical constants for mixed forest + medium/coarse timber
@@ -126,7 +126,8 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 			}
 		}
 
-		for (int k = 0; k<4; ++k){
+		// The automaton iterates over the random grid
+		for (int k = 0; k<6; ++k){
 			//write_png(grid);
 			//++grid.n_intervals;
 			for (int l = 0; l<5; ++l){
@@ -174,8 +175,8 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 		}
 
 		
-		grid.data[GRID_SIZE/2][GRID_SIZE/2].current_type = FIRE;
-		grid.data[GRID_SIZE/2][GRID_SIZE/2].default_type = FIRE;
+		grid.data[GRID_SIZE/6][GRID_SIZE/2].current_type = FIRE;
+		grid.data[GRID_SIZE/6][GRID_SIZE/2].default_type = FIRE;
 	}
 
 	return grid;
@@ -264,7 +265,7 @@ bool is_valid(Point point) {
  * @return True if the grid is ended, false otherwise
  */
 bool is_ended(Grid grid) {
-	if (grid.model == 0 || grid.model == 1 || grid.model == 2) {
+	if (grid.model == 0 || grid.model == 1 || grid.model == 2 || grid.model == 3) {
 		bool is_fire = false;
 
 		// Check if there is no more fire, if there is no more fire, the grid is ended
@@ -580,8 +581,13 @@ void tick(Grid * grid) {
 					if (is_valid(neighbors[k])) {
 						double slope = get_slope(point, neighbors[k], grid);
 						double wind = get_wind(point, neighbors[k], grid);
-						double phi = max_3(-1., signe(slope)*C_SLOPE*slope*slope + signe(wind)*C_WIND*pow(fabs(wind), B));
-						double proba = 1.-pow(1-M3_PROBA_V_BURN, 1.+phi);
+						double phi = signe(slope)*C_SLOPE*slope*slope + signe(wind)*C_WIND*pow(fabs(wind), B);
+						double proba;
+						if (phi<=-1.){
+							proba = M3_PROBA_V_BURN*1./(fabs(phi));
+						} else {
+							proba = 1.-pow(1-M3_PROBA_V_BURN, 1.+phi);
+						}
 						//printf("FROM (%d,%d) TO (%d,%d): slope=%.3f wind=%.3f phi=%.3f proba=%.3f\n",point.x, point.y, neighbors[k].x, neighbors[k].y,slope, wind, phi, proba);
 
 						// change the state of the neighbors based on the probability
