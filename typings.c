@@ -110,6 +110,10 @@ typedef struct {
 	 * The state of the tile (for example, the state of a fire)
 	 */
 	int state;
+	/**
+	 * The altitude of the tile
+	 */
+	double altitude;
 } Tile;
 
 /**

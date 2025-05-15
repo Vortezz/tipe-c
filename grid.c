@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <png.h>
 #include <sys/stat.h>
+#include <math.h>
 
 /**
  * Model 0 constants
@@ -48,11 +49,22 @@ const int M1_D_PROBA_GRASS_BURN = 16;
  */
 const int M1_PROBA_STATE_CHANGE = 16;
 
+const double M3_PROBA_V_BURN = 1.;
+const double M3_PROBA_STATE_CHANGE = 1./16.;
+/**
+ * Typical constants for mixed forest + medium/coarse timber
+ */
+const double B = 0.46;
+const double C_WIND = 2.93*pow(1.14, -0.5);
+const double C_SLOPE = 5.275*pow(0.08, -0.3);
+
+
 void write_to_file(Grid grid);
 Tile ** copy_grid(Tile ** data);
 Point * get_direct_neighbors(Grid * grid, Point point);
 Point * get_diagonal_neighbors(Grid * grid, Point point);
 bool is_valid(Point point);
+void write_png(Grid grid);
 
 /**
  * Create a grid
@@ -97,6 +109,7 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 				grid.data[i][j].current_type = value;
 				grid.data[i][j].default_type = value;
 				grid.data[i][j].state = 0;
+				grid.data[i][j].altitude = 0;
 			}
 		}
 	} else {
@@ -109,10 +122,15 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 				grid.data[i][j].current_type = value;
 				grid.data[i][j].default_type = value;
 				grid.data[i][j].state = 0;
+				grid.data[i][j].altitude = 0;
 			}
 		}
 
-		for (int k = 0; k<20; ++k){
+		for (int k = 0; k<4; ++k){
+			//write_png(grid);
+			//++grid.n_intervals;
+			for (int l = 0; l<5; ++l){
+			
 			Tile ** copy = copy_grid(grid.data);
 			for (int i = 0; i < GRID_SIZE; i++) {
 				for (int j = 0; j < GRID_SIZE; j++) {
@@ -152,6 +170,7 @@ Grid create_grid(int model, Window window, int coord_x, int coord_y, bool export
 			}
 			free(grid.data);
 			grid.data = copy;
+			} 
 		}
 
 		
@@ -278,6 +297,10 @@ bool check_probability(Grid * grid, Point point, TileType type, int proba) {
 	return get_tile(*grid, point).current_type == type && get_random(proba) == 0;
 }
 
+bool check_probability_3(Grid * grid, Point point, TileType type, double proba) {
+	return get_tile(*grid, point).current_type == type && get_random_3() < proba;
+}
+
 /**
  * Apply the rules to a cell (model 0 and 1)
  *
@@ -320,6 +343,7 @@ void apply_to_cell(Grid * grid, Tile ** copy, Point point, Point * neighbors, in
 
 	free(neighbors);
 }
+
 
 /**
  * Get the burn probability (used for Alexandridis model)
@@ -394,6 +418,31 @@ double get_burn_probability(Tile tile, Point point, Point parent, Grid * grid) {
 	double p_s = exp(0.078 * 0 /* TODO : Add angle for slope */);
 
 	return p_h * (1 + p_v) * (1 + p_d) * p_w * p_s;
+}
+
+/**
+ * Get the slope between Point point and point v
+ */
+double get_slope(Point point, Point v, Grid* grid){
+	if (!is_valid(v) || !is_valid(point) || v.x == point.x && v.y == point.y) return 0. ;
+	double h = get_tile(*grid, v).altitude - get_tile(*grid, point).altitude;
+	double dx = v.x - point.x;
+	double dy = v.y - point.y;
+	return h/(sqrt(dx*dx + dy*dy));
+}
+
+/**
+ * Get the projected value of the wind vector onto the vector v-point
+ */
+double get_wind(Point point, Point v, Grid* grid){
+	if (!is_valid(v) || !is_valid(point) || v.x == point.x && v.y == point.y) return 0. ;
+	// Wind vector components
+	double Ux = grid->wind_speed*sin(grid->wind_direction*M_PI/180.);
+	double Uy = grid->wind_speed*cos(grid->wind_direction*M_PI/180.);
+	// v-point vector components
+	double dx = v.x - point.x;
+	double dy = v.y - point.y;
+	return dx*Ux + dy*Uy;
 }
 
 /**
@@ -526,12 +575,50 @@ void tick(Grid * grid) {
 				if (tile.current_type != FIRE) {
 					continue;
 				}
+				Point * neighbors = get_direct_neighbors(grid, point);
+				for (int k = 0; k<4; ++k){
+					if (is_valid(neighbors[k])) {
+						double slope = get_slope(point, neighbors[k], grid);
+						double wind = get_wind(point, neighbors[k], grid);
+						double phi = max_3(-1., signe(slope)*C_SLOPE*slope*slope + signe(wind)*C_WIND*pow(fabs(wind), B));
+						double proba = 1.-pow(1-M3_PROBA_V_BURN, 1.+phi);
+						//printf("FROM (%d,%d) TO (%d,%d): slope=%.3f wind=%.3f phi=%.3f proba=%.3f\n",point.x, point.y, neighbors[k].x, neighbors[k].y,slope, wind, phi, proba);
 
+						// change the state of the neighbors based on the probability
+						
+						if (check_probability_3(grid, neighbors[k], TREE, proba) ||
+						check_probability_3(grid, neighbors[k], GRASS, proba)) {
+						
+							Tile * tile_copy = &copy[neighbors[k].x][neighbors[k].y];
 
+							tile_copy->current_type = FIRE;
+							tile_copy->state = 0;
+						}
+					}
 
+				}
+
+				// change the state of the point based on the probability to a new state or to burnt
+				 
+				if (check_probability_3(grid, point, FIRE, M3_PROBA_STATE_CHANGE)) {
+					Tile * tile_copy = &copy[point.x][point.y];
+
+					// If the tile is newly on fire, we increment the state of the tile, otherwise we set it to burnt
+					if (tile.state == 0) {
+						tile_copy->state++;
+					} else {
+						tile_copy->current_type = BURNT;
+						tile_copy->state = 0;
+					}
+				}
+
+				free(neighbors);
 
 			}
 		}
+		free(grid->data);
+		grid->data = copy;
+		draw_grid(grid->window, *grid);
 
 	} else {
 		// Unknown model :(

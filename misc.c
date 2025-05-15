@@ -12,6 +12,12 @@
 int max(int a, int b) {
 	return a > b ? a : b;
 }
+/**
+ * Get the minimum of two double
+ */
+int max_3(double a, double b) {
+	return a > b ? a : b;
+}
 
 /**
  * Get the minimum of two integers
@@ -22,6 +28,19 @@ int max(int a, int b) {
  */
 int min(int a, int b) {
 	return a < b ? a : b;
+}
+
+/**
+ * Get the minimum of two double
+ */
+int min_3(double a, double b) {
+	return a < b ? a : b;
+}
+
+int signe(double x) {
+    if (x > 0.0) return 1;
+    if (x < 0.0) return -1;
+    return 0;
 }
 
 /**
@@ -65,4 +84,11 @@ char * readfile(FILE * file) {
  */
 int get_random(int max) {
 	return (int) (random() % max);
+}
+
+/**
+ * Get a random number between 0. and 1.
+ */
+double get_random_3() {
+	return (double) rand()/RAND_MAX;
 }

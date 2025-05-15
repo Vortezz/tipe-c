@@ -6,7 +6,7 @@
  * <p>
  * The program can be launched with the following arguments:
  * <ul>
- * <li>--model [model]: The model of the grid (0-2)</li>
+ * <li>--model [model]: The model of the grid (0-3)</li>
  * <li>--count [count]: The number of grids to simulate</li>
  * <li>--iterations [iterations]: The max number of iterations in one interval</li>
  * <li>--intervals [intervals]: The max number of intervals</li>
