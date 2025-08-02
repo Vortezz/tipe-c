@@ -1,1 +1,3 @@
-cd /mnt/c/Users/jbacq/Documents/GitHub/tipe-c
+# Tipe C
+
+Ce _repository_ est le code du TIPE réalisé par mes soins avec @limulid, sur le thème "Transition, transformation, conversion"
